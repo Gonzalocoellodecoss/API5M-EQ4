@@ -1,0 +1,889 @@
+crear carpetas principales desde cmd (opcional)
+cd\
+dir
+md apps 
+cd apps
+md API
+
+configuracon de WebAPI VSCode 
+crear web api netcore 
+dotnet new webapi -o Unach.PuntoVenta.API
+
+!!!a la altura de la api porque es un proyecto 
+!!!estructura kami case 
+!!! como funciona cada carpeta creada en cmd 
+--modelos 
+unicamente de la estructura que va presentar la api 
+
+--crear librearia 
+dotnet new classslib --help
+dotnet new
+
+database 
+conexion 
+
+repositorios 
+intercepcion del modelo y la base de datos, las reglas de negocio del proyecto 
+
+area de referencia
+add reference:  para tener referencia de las clases de otro proyecto
+dotnet add reference ../Unach.API.Core/Unach.API.Core.csproj
+
+me:
+C:\apps\Unach.AgendaEP.API\Unach.AgendaEP.API.csproj
+dotnet add reference ../Unach.AgendaEP.API/Unach.AgendaEP.API.csproj
+
+!!! referencia con la carpeta modelos y DB, en resumen:
+DB
+--modelos 
+C:\apps\API5M\unach.agenda.databases>dotnet add reference ../unach.agenda.repositorios/unach.agenda.repositorios.csproj
+Se ha agregado la referencia "..\unach.agenda.repositorios\unach.agenda.repositorios.csproj" al proyecto.
+
+repositorios
+--modelos 
+--DB
+modelos 
+xxx
+api
+--repositorios 
+----------------------------------------------------------------	------------------------------------------
+abertura para VScode
+code .
+-----------------------------------------------------------------	-----------------------------------------
+1.-DB
+proyecto de database
+!!!asegurar que esta dentro de la carpeta 
+--relacionar con modelos 
+---revisar ruta y pegar la ruta
+----dotnet add reference ../Unach.PuntoVenta.Modelos/Unach.PuntoVenta.
+nos vamos al archivo csproj
+
+2.-repositorios 
+!!!asegurar que esta dentro de la carpeta 
+--relacionar con modelos 
+--realcionar con data bases
+se cambian el nombre de las rutas de acorde al nombre de los archivos
+
+3.-api 
+!!!asegurar que esta dentro de la carpeta 
+--relacionar con repositorios
+con la direccion se cambia nuevamente al nombre del repositorio
+
+!!!Eliminar los archivos basura "Class1"
+--------------------------------------------------------------------------------------------------------------------
+se ejecuta (prueba de fuego) en VScode 
+comporbar funcionamiento de la api
+--dotnet run ...
+!!!nos dara un puerto, se copia y se pega en un navegador 
+--https//localhost:5001/swaggert/index.html
+!!!la api se compila y se mostrara el servicio swaggert
+!!!diferentes equipos diferentes puertos
+
+PS C:\apps\API5M> cd unach.agenda.API
+PS C:\apps\API5M\unach.agenda.API> dotnet run
+Compilando...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5228
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\apps\API5M\unach.agenda.API
+warn: Microsoft.AspNetCore.Server.Kestrel[22]
+      As of "10/19/2023 13:24:02 +00:00", the heartbeat has been running for "00:00:03.6829036" which is longer than "00:00:01". 
+This could be caused by thread pool starvation.
+
+!!!sitio web Swagger:
+http://localhost:5228/swagger
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Instalar paquetes SQL Server en data bases 
+>dotnet add package Microsoft.Data.SQLClient
+--instalar en repositorios tambien
+> dotnet add package Microsoft.EntityFrameworkCore
+> dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+--instalar en repositorios tambien
+> dotnet add package Microsoft.EntityFrameworkCore.Design
+--instalar en repositorios tambien
+> dotnet add package Microsoft.EntityFrameworkCore.Tools
+----------------------------------------------------------		----------------------------------------------------------------------------------------------
+//plantilla que sigue una clase, definiendo que funciones debe tener, nombre y propiedades
+
+1.
+se crean las carpeta:  interfaces y servicios en repositorios
+	dentro de interfaces se craa el archivo: ilogin.cs
+		public interface iLogin
+		{
+			boocl IniciarSecion(User user);
+			//
+			return true;
+		}
+1.1
+modelo- crear archivo user
+	public class User 
+	{
+		public string? Username(get; set;)
+		public string? PassWord(get; set;)
+	}
+
+2.
+carpeta servicios 
+	LoginServices.cs 
+	public class loginservices: ilogin
+	{
+		public bool IniciarSecion(User user)
+		{
+		//implementacion de la base de datos
+		return true;
+		}
+	}
+3.
+
+dela lado de controlador crear un archivo SeguridadController.cs
+	usign microoft.AspNetcore.Mvc;
+	[ApiController]
+	[Route ("Api/Seguridad")]
+	public class seguridadcontroller:controllerBase
+	{
+		ILogin -LoginService;
+		public SeguridadController(ILogin login)
+		{
+			-LoginService=login;
+		}
+	}
+
+	[HttpPost("iniciarSecion")]
+		public 
+		{
+		
+		}
+
+inyeccion de dependencia
+generar una clase que monitoree mi servicios 
+!!!desde a la api en el archivo programs se hara la Inyeccion de Dependecia
+
+    //instanciame la clase login y loginservice una unica vez
+builder.Services.AddTransient<ILogin,LoginService>();
+
+desde constructor 
+public seguridadController(Login login)
+{
+
+}
+
+
+controlador 
+program 
+realizar inyeccion de dependencias
+bulder.Services.AddTrasient()
+
+comprobacion 
+dotnet run 
+----------------------------------------------------------------------------------------------------------------------------------
+!!! desde repositorios en la carpeta servicios, "archivo LoginService.cs" copiar pegar
+
+public async Task<bool> IniciarSesion(User user)
+    {
+        
+   bool Resultado=false;
+   //Implemetnacion de la base de datos
+   //         //Logica a la conexion a las bases de datos
+        // var Resultado=new Empleados();
+        using (var sqlConnection=new SqlConnection(ContextoConfiguracion.CadenaConexion))
+        {
+           try
+           {
+            var Comando=new SqlCommand();
+            Comando.Connection=sqlConnection;
+            Comando.CommandText="[dbo].[Autentificar]";
+            Comando.CommandType=System.Data.CommandType.StoredProcedure;
+            Comando.Parameters.AddWithValue("@Usuario",user.Correo);
+            Comando.Parameters.AddWithValue("@Password",user.PassWord);
+            
+            await sqlConnection.OpenAsync();
+            var lectura=await Comando.ExecuteReaderAsync();
+            if(lectura.HasRows)
+            {
+                if(lectura.Read())
+                {
+              Resultado=true;
+  
+                }
+            }else{
+              Resultado=false;
+            }
+
+            
+           }
+           catch (System.Exception ex)
+           {
+            Resultado=false;
+          
+         
+           } 
+        }
+
+ return Resultado;
+   return true;
+    }
+
+!!!se hace asincronos los metodos bool
+
+1.2 
+desde repositorios crear la carpeta Helpers, e archivo ContextoConfiguracion.cs
+
+public class ContextoConfiguracion
+{
+public static string? CadenaConexion {get; set;}
+}
+
+1.3
+creacion de la cadena de conexion 
+desde programs de la API, se inserta:
+ContextoConfiguracion.CadenaConexion=builder.Configuration.GetConnectionString("ConexionAgenda");
+
+en json, de appsettings, se inserta, desdepues del coma:
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "CadenaConexion":""
+
+1.4
+cadena de conexion (general estructura) a integrar:
+DataSource=192.168.1.71;InitialCatalog=VentasDB;IntegratedSecurity=False;UserID=Unach;Password=Universidad2023-A;ConnectTimeout=60;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailOver=False
+
+cadena de conexion de base de datos:
+DataSource=DESKTOP-K029FCJ\\SQLEXPRESS;InitialCatalog=AgendaDB;IntegratedSecurity=False;UserID=DESKTOP-K029\\DELL;Password=;ConnectTimeout=60;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailOver=False
+
+!!!consultar con SQLserver 
+server name: DESKTOP-K029FCJ\SQLEXPRESS
+id(user name):  DESKTOP-K029\DELL
+password: none
+DB: AgendaDB
+
+!!!depurar desde un checkpoint en el archivo seguridadcontroller en el var de loginservece de inicio de sesion user 
+!!! y en progrms desde contexto configuracion 
+!!!revisar desde la pagina web Gwet que los paquetes sean resividos a los user 
+!!!si haresivido valores nulos es porque las tablas de la base de datos esta vacia.
+
+------------------------------------------------------------------------------------------------------------------------------------------
+1
+conexion a base de datos.
+se crea un nuevo archivo en la base de datos "SQLServer" (nombre, opcional)
+y una archivo "AgendaDBContext.cs":
+
+public partial class AgendaDBContext: Dbcontext
+
+!!!referencia a instalar de package Microsoft.EntityFrameworkCore 
+using Mircrosoft.EntityFrameworkCore;
+
+1.1
+clase de conexion y liga de base datos, creacion manual 
+!!! conexio a las tablas de AgendaDB
+!!! Scolfonding comando de generacion de estructura 
+
+using Mircrosoft.EntityFrameworkCore;
+
+public partial class AgendaDBContext: Dbcontext
+{
+//necesito de manera virtual conexion a la BD de la estructura usuarios la base usuarios
+public virtual Dbset<Usurios> Usuarios {get; set;}
+
+1.3
+//sobre escritura de metodo de configuracion
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)   
+	{
+	//estructura 
+
+//configuracion de negacion, si no esta configurado, configuralo
+if (!optionsBuilder.IsConfigured)
+{
+	//utiliza SQLserver donde este la cedena de conexion
+	optionsBuilder.UseSqlServer(ContextoConfiguracion, builder=>{
+		builder.EnableRetryOnfailure(5, TimeSpan.FromSeconds(10), null)
+	})
+	
+		
+}
+
+	base.OnConfiguring(optionsBuilder);
+	}
+}
+
+
+1.2
+!!!para esto se realiza la creacion de un nuevo archivo en Modelos, llamado de acuerdo a las tablas a usar 
+!!! clase Usuario.cs (tabla padre) 
+Public class Usuario
+{
+//atributos de la tabla padre Usuario
+	public Guid IdUsuario { get; set;}
+public string? Nombre {get; set;}
+public string? Apellido {get; set;}
+public string? Correo {get; set;}
+public string? Contraseña {get; set;}
+public string? Sexo {get; set;}
+public string? Numero_de_telefono {get; set;}
+}
+
+1.4 
+!!!la ambiguedad aparece cuando los proyectos que estan trabajando por capas estas existen direferentes referencias en todas o ditintas capas
+creacion de clase, tipo proyecto para acceder a la configuracion.
+!!!un proyecto con la capacidad de usar todas las clases
+donet new classlib --name unach.agenda.helpers
+
+se mueve el archivo ContextoConfiguracion.cs a la carpeta creada,
+!!! se elimina la carpeta Helpers
+
+se hace referencia desde la API de helpers en 
+<ItemGroup>
+	<ProjectReference Include ="..\unach.agenda.helpers\unach.agenda.helpers.csproj ">
+</ItemGroup>
+
+se hace referencia desde los Repositorios de helpers
+se hace referencia desde la BaseDatos de helpers
+!!!se hace referencia en todos los proyecto que lo necesitan
+
+
+!!! se omiten el comiten los errores de cadena de conexion y de la implemetnacion de base de datos (toda la estructura)
+!!! se revisa la herencia de ILogin
+!!!para lugo complilar
+dotnet build 
+!!!revisar lineas de codigo, cerrar e iniciar otra ve VScode 
+
+1.5 
+repositorios, servicios se habia omitido casi todo el codigo, se modifica en:
+!!!se creo al momento de implementar una interfaz para login en Program.cs desde pues comentar
+// son metodos asincronos "async"
+//FirstOrDefaultAsync se uso el entityframeworkcore de microsoft 
+pubilc async Task<bool > IiniciarSesion(User user)
+{
+	//consultas linq (consultas de SQL), consultar a la base de datos 
+	using (var conexion=new AgendaDBContext())
+	{
+	//de acuerdo a los parametos que contiene Usuarios.cs
+	var consulta = await (from c in conexion.Usuarios 
+	where c.Correo == user.Correo
+	&& c.Contraseña==user.PassWord
+	select c). FirstOrDefaultAsync();
+	
+	if(consulta!=null)
+		{
+			return true;
+		
+		}else{
+		return false;
+		}
+	}
+}
+instalar paquetes SQL server en repositorios para la conexion de la base de datos
+se abre una nueva terminal en el mismo lugar (en el repositorio)
+>dotnet 
+>dotnet
+>dotnet
+>dotnet dotnet add package Microsoft.EntityFrameworkCore 
+>dotnet dotnet add package System.Data.SqlClient
+
+
+usar el metodo SqlConnection()
+usign
+
+
+crear carpeta configurar 
+
+cadena de configuracion: 
+data source = 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+Procedimiento de Almacenado
+acceder a SQL server, ir a la database "AgendaDB" trabajando la tabla padre Usuarios para hacer el CRUD 
+en la carpeta de Programacion desplegamos y para dar click derecho a stored procedures, y 
+le damos en  stored procedures...
+!!! no paracer una nueva venta con los comados e codigo necesarios un espacio para hacer consultas
+!!! se modifica lo siguiente 
+-- =============================================
+-- Author:		Gonzalo Coello de Coss
+-- Create date: 10/11/2023
+-- Description:	Adiministracion de Usuarios
+-- =============================================
+CREATE PROCEDURE dbo.administracionUsuarios
+-- Add the parameters for the stored procedure here
+	@opcion varchar(100)='',
+	AS
+
+en BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
+	SET NOCOUNT ON;
+	--parametros de Usuarios
+	SELECT * FROM dbo.Usuarios
+
+!!! seleccionamos "SELECT * FROM dbo.Usuarios" clic derecho y  lista de diseño (Desing Query) 
+y le damos en ok 
+
+!!! consulta 
+SELECT       IdUsuarios, Nombre, Apellido, Correo, Contraseña, Sexo, Numero_de_telefono
+FROM            Usuarios
+
+!!!usamos los parametros y lo coocamos en la inserccion de parametros 
+	@opcion varchar(100)='',
+	@IdUsuarios uniqueidentifier = null, 
+	@Nombre varchar(100)='',
+	@Apellido varchar(100)='', 
+	@Correo varchar(100)='', 
+	@Contraseña varchar(100)='', 
+	@Sexo varchar(100)='', 
+	@Numero_de_telefono varchar(100)=''
+
+
+Begin es donde se diseñara el CRUD
+!!! para generar las consultas tomamos como referencia "SELECT * FROM dbo.Usuarios"  lo seleccionamos 
+clik derecho en lista de diseño, en la parte superior click derecho nuevamente y en Change type lo cambiamos 
+a la estrucutra que queremos.
+
+--estructua CRUD
+BEGIN
+ if @opcion='Consultar'
+ BEGIN
+ SELECT * FROM dbo.Usuarios
+ END
+ if @opcion='Insertar'
+ BEGIN
+ INSERT INTO Usuarios
+                         (IdUsuarios, Nombre, Apellido, Correo, Contraseña, Sexo, Numero_de_telefono)
+VALUES       (@IdUsuarios, @Nombre, @Apellido, @Correo, @Contraseña, @Sexo, @Numero_de_telefono)
+ END
+ if @opcion='Actualizar'
+ BEGIN
+ UPDATE      Usuarios
+SET                Nombre = @Nombre, Apellido = @Apellido, Correo = @Correo, Contraseña = @Contraseña, Sexo = @Sexo, Numero_de_telefono = @Numero_de_telefono
+ WHERE IdUsuarios = @IdUsuarios
+ END
+ if @opcion='Eliminar'
+ BEGIN
+ DELETE FROM Usuarios
+WHERE        (IdUsuarios = @IdUsuarios)
+ END
+
+END
+GO
+
+!!! se ejecuta el Query, nos indicara en la terminal que se completaron correctamente los comandos 
+Commands completed successfully.
+
+Completion time: 2023-11-10T20:15:27.9026755-06:00
+
+!!! de aqui en adelante CREATE PROCEDURE se usa una vez se cambiara por ALTER
+!!! lo que nos permitira modificar sin problemas 
+
+antes:
+CREATE PROCEDURE dbo.administracionUsuarios
+despues:
+ALTER PROCEDURE dbo.administracionUsuarios
+
+!!! lo podemos cerrar ya que nos debera de aparacercer en Procedimientos Almacenados click derecho y en modificar
+!!! para comprobar su funcion, revisamos la tabla "usuarios en mi caso" si hay registros 
+!!! vamos al procedimientos almacenados click derecho en ejecutar procedimiento almacenado 
+!!!se nos abrira una ventana nueva en donde podremos realizar una que otra instruccion como consultar
+!!! lo poemos en el atributo de opciones, y ok, en la terminal dara 
+!!! en el caso que si este arrojara un id lo copiamos para seguir con la instruccion de insertar
+!!! un un nuevo Query vamos por la siguiente consulta SELECT NEWIID() 
+!!! mismo procedimieto e colocamos insertar en opcion, y llenams datos 
+!!! en la terminal no maracar cero esta bien pero no nos indica que este funcione al cien 
+
+de nuevo a procedimiento almacenado para mejorar 
+necesito deicr que tendra un parametro de salida 
+!!! sera de tipo de salida 
+@Exito bit = false output,
+@Mensaje varchar(max)='' output
+
+en insertar 
+!!!todo modificacion se realiza a traves de la base de datos
+
+set @Exito = 1
+set @Mensaje = 'Se inserto correctamente'
+SELECT @Exito[Exito],@Mensaje[Mensaje]
+
+asi quedaria
+--estructua CRUD
+BEGIN
+ if @opcion='Consultar'
+ BEGIN
+ SELECT * FROM dbo.Usuarios
+ END
+ if @opcion='Insertar'
+ BEGIN
+ INSERT INTO Usuarios
+                         (IdUsuarios, Nombre, Apellido, Correo, Contraseña, Sexo, Numero_de_telefono)
+VALUES       (@IdUsuarios, @Nombre, @Apellido, @Correo, @Contraseña, @Sexo, @Numero_de_telefono)
+
+set @Exito = 1
+set @Mensaje = 'Se inserto correctamente'
+SELECT @Exito[Exito],@Mensaje[Mensaje]
+
+ END
+ if @opcion='Actualizar'
+ BEGIN
+ UPDATE      Usuarios
+SET                Nombre = @Nombre, Apellido = @Apellido, Correo = @Correo, Contraseña = @Contraseña, Sexo = @Sexo, Numero_de_telefono = @Numero_de_telefono
+ WHERE IdUsuarios = @IdUsuarios
+ set @Exito = 1
+set @Mensaje = 'Se actualizo correctamente'
+SELECT @Exito[Exito],@Mensaje[Mensaje]
+
+ END
+ if @opcion='Eliminar'
+ BEGIN
+ DELETE FROM Usuarios
+WHERE        (IdUsuarios = @IdUsuarios)
+set @Exito = 1
+set @Mensaje = 'Se elimino correctamente'
+SELECT @Exito[Exito],@Mensaje[Mensaje]
+
+ END
+
+END
+----------------------------------------------------------------------------------------------------------------------------------------------
+proyecto Blazor webasssembly
+
+!!! se crea a la altura de la api
+dotnet new blazorwasm -o unach.agenda.portal --no-https -f net7.0
+
+!!!verificar
+"cd" nos vamos al portal y despues 
+dotnet  watch
+
+conexion a la api
+nos vamos a la api e ejecutarla 
+dotnet run 
+
+se crea carpeta helpers para unicamente para portalcon las carpetas interface e services se copia 
+la misma interfaz de login de repositorios
+!!! se hace referencia de modelos a Portal para usar User 
+  <ItemGroup>
+    <ProjectReference Include="..\unach.agenda.modelos\unach.agenda.modelos.csproj" />
+  </ItemGroup>
+
+en helpers de portal, nos vamos a la carpeta interfaces, y como nuevo archivo ponemos ILogin.cs
+public interface ILogin
+{
+	Taslk <bool> Login(User user);
+}
+
+!!!comunicacion a la api 
+en services crear el archivo LoginServices
+public class LoginService:ILogin
+{
+	public Task <bool> Login(User user)
+	//public Task <bool> IniciarSesion(User user)
+	{
+	
+	}
+}
+
+inyecciones de dependicias en public LoginService
+!!! para le funcionamiento de HttpClient es necesario la rerencia...
+using System.Net.Http.Json;
+using System.Text.Json;
+
+public class LoginService:ILogin
+{
+	public class LoginService:ILogin
+		private readonly HttpClient httpClient;
+		publick LoginService(HttpClient httpClient)
+		{
+			this.httpClient = httpClient;
+		}
+	public async Task<bool>Login(User user)
+	{
+		//metodo 
+		return false;
+	}
+}
+
+//metodo
+!!! para su funcionamiento de debe instalar primero el paquete en el portal 
+dotnet add package Newtonsoft.Json
+try
+	{
+		var response = await httpClient.PostAsJsonAsync("http://localhost:5228/Api/"+"Seguiridad/Login", user);
+		//var response = awathttpClient.PostAsJsonAsync("https://localhost:5140/Api/"+"Seguiridad/Login", A);
+		if (response.IsSuccessStatusCode)
+		{
+			var content = await response.Content.ReadAsStringAsync();
+			var items = JsonSerializer.Deserialize<bool>(content,GetJsonAsync.Options;)
+			return items;
+		}
+
+	}
+	catch (Exception ex)
+	{
+
+	}
+	//return false;
+	return null;
+return null;
+return false;
+
+!!! para "GetJsonAsync.Options;" se crea una clase al nivel de helpers de ClaseProyecto Portal, llamada GetJsonAsync.cs
+using System.Text.Json.Serialization;
+using System.Text.Json;
+
+public static class GetJsonAsync
+{
+	public static JsonSerializerOptions Options => new JsonSerializerOptions
+	{
+		PropertyNameCaseInsensitive = true,
+		Converters =
+		{
+			new JsonStringEnumConverter()
+		}
+	};
+}
+
+desde el archivo program por debajo de "UseSwaggerUI();" y antes de "app.useHttpsRedirection();"
+!!! se agrega desde el claseproyecto de api la siguiente linea de comando para enable cors 
+
+app.UseCors(b => b.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+
+tambien la inyeccion en program de portal
+builder.Services.AddScoped<ILogin, LoginService>();
+//builder.Services.AddTransient<ILogin, LoginService>();
+
+
+en Pages 
+//no eliminar nada de counter razor 
+se crea el archivo Counter.razor.cs
+public partial class Counter
+{
+	private int currentCount = 0;
+
+   	 private void IncrementCount()
+    	{
+        		currentCount++;
+    	}
+
+}
+
+inyeccion de dependenciasde loginService y navegacion en Counter.razor
+
+@code{
+
+[Inject]
+protected ILogin  _loginService { get; set; }
+	[Inject]
+	NavigationManager Navigation {get; set; }
+	public User UserT {get; set;} =new User(){
+		//de acuerdo como este en modelos
+		Password="",
+		UserName=""
+	};
+
+//metodode autenticacion
+public async IniciarSesion()
+{
+	//var  resultado =  await_loginService.IniciarSesion(UserT);
+	//var  resultado =  await_loginService.Autentication(UserT);
+	var  resultado =  await_loginService.Login(UserT);
+	//if(resultado.value) 
+	if(resultado) 
+	{
+		//fetchdata es el nombre de la pagina 
+		Navigation.NavigateTo("/fetchdata");
+	}
+}
+
+
+}
+
+en Counter.razor de pages  introduciremos una estructura  html o cualquier proyecto
+@page "/counter"
+//copia y pega la estructura  HTML dentro de page desde el div contenedor(opcional) 
+//para los archivos css que hacen referencias del HTML va dentro de la carpeta wwwroot en css 
+
+!!!en index HTML donde se hace referncia del codigo del css para que respete el diseño del login 
+o proyecto.
+!!! tener claro css, js...  o podemos usar:
+
+<input id ="usuario" type ="text name usaurio" placeholder="Usuario" @bind="UserT.UserName" required>
+<input id ="usuario" type ="text name usaurio" placeholder="password" @bind="UserT.Password"  required>
+<button  title ="Ingresar" name ="Ingresar" @onclick="IniciarSesion">Login</button>
+
+!!!ejecutamos la api primero y de ahi el portal 
+!!!en la web nos aparecera un error y para revisarlo le damos F12 en inspeccionar y en console 
+!!!relacionado que Login ni esta registrado y para eso nos iremos a program de Portal
+colocamos por debajo de var builder = WebAssemblyHostBuilder. lo suieguiente:
+
+builder.Services.AddScoped<ILogin, LoginServices>();
+----------------------------------------------------------------------------------------------------------------------------------------------
+Tokens 
+database - helpers - interfaces - seguridad 
+
+api
+nugetts
+paquetes
+  
+autenticacion 
+proyecto api instalar los paquetes 
+dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer  
+dotnet add package Microsoft.AspNetCore.OpenApi
+dotnet add package Microsoft.IdentityModel.Tokens
+
+en seguridad controller integramos como un metodo asincrono a IActionResult IniciarSesion
+
+public async Task <IActionResult> IniciarSesion(User user)
+{
+	var resultado = await _LoginService.IniciarSesion(user);
+	if(resultado.Correo!=null)
+	{
+		//Generar Token
+		var token = GenerarTokn(resultado);
+		return Ok(token);
+	}else
+	{
+		//Enviar Error
+		return BadRequest();
+	}
+	
+} 
+
+!!!click derecho para poner refrencia a  SymmetricSecurityKey, la libreria Encoding,
+Encoding,e Claim, modificamos los parametros de acorde este, y por ultimo configuration...
+
+//Metodo Token
+private string GenerarTokn(Usuario usu)
+{
+//Header
+//issuerSigningKey, SecurityAlgorithms. encriptaciones adecuadas de suguridad
+        SymmetricSecurityKey issuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(this._Configuration["Authentication:Secretkey"]));
+SigningCredentials signingCredentials = new SigningCredentials(issuerSigningKey, SecurityAlgorithms.HmacSha256);
+c header = new JwtHeader(signingCredentials);
+//Claims
+//no poner datos personales
+Claim[] claims = {
+    new Claim(ClaimTypes.Email, usu.Correo),
+    new Claim(ClaimTypes.Name, usu.PassWord)
+
+};
+//Payload
+JwtPayload payload = new JwtPayload(
+    this._Configuration["Authentication:Issuer"],
+    this._Configuration["Authentication:Audience"],
+    claims,
+    DateTime.Now,
+    DateTime.Now.Date.AddDays(1)
+         
+);
+JwtSecurityToken token = new JwtSecurityToken(header, payload);
+return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
+!!!ponemos en la configuration en el metodo de SeguridadController
+la inyeccion de dependencias de configuration 
+
+IConfigurataion _Configuration;
+
+public SeguridadController(ILogin, login, IConfigurataion Configuration)
+{
+	_Configuration=configuration; 
+	_LoginService=login;
+}
+
+
+en repositorios ILogin el metodo devuelva a Usuario
+public interface ILogin
+{
+	Task<Usuarios> IniciarSesion(User user)
+}
+
+
+en LoginServices tambien
+ public async Task<Usuarios> IniciarSesion(User user)
+    {
+       using (var conexion=new AgendaDBContext())
+       {
+        var consulta = await (from c in conexion.Usuarios
+        where c.Correo == user.Correo
+        && c.Contraseña == user.PassWord
+        select c). FirstOrDefaultAsync();
+
+        if(consulta != null)
+        {
+          return consulta;
+        }else{
+          return new Usuarios;
+        }
+       } 
+    }
+
+
+para this._Configuration["Authentication:Secretkey", nos vamos a appsettings.json
+
+},
+"Authentication": {
+    "Secretkey": "Unach-A#3_PuntoVenta-",
+    "Issuer": "http://localhost:53601",
+    "Audience": "https://localhost:44384",
+    "Subject": "UnachAccessToken",
+    "Expire": 600000,
+    "UseRsa": false
+ }
+
+
+versiones estables, cambiar copiando y pegando, desde el proyento api.sprocj :
+<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.20" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.24.0" />
+
+!!! No olvidarse de poner las libreias (using)
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+
+en Program.cs del proyecto api se coloca:
+//Token
+ app.UseAuthentication();
+
+y tambien la dependencia del token, que igualmente se agregan las referencias para su funcionamiento
+//Para el Uso de Tokens
+
+builder.Services.AddAuthentication(op=>{
+  op.DefaultAuthenticateScheme=JwtBearerDefaults.AuthenticationScheme;  
+  op.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options=>
+{
+   options.TokenValidationParameters = new TokenValidationParameters
+ {
+     ValidateIssuer = true,
+     ValidateAudience = true,
+     ValidateLifetime = true,
+     ValidateIssuerSigningKey = true,
+     ValidIssuer = builder.Configuration["Authentication:Issuer"],
+     ValidAudience = builder.Configuration["Authentication:Audience"],
+     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Authentication:Secretkey"]))
+1 };  
+});
+
+???
+"Logging":{
+    "LogLevel":{
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+     }
+}
+
+cambie el valor que me  debolvera de task por Usuarios, en el login y el loginservice, me marco error 
+de ahi solo cambie el de loginservice por un bool, para luego No hot reload changes to apply.
+el portal se seguia manteniendo, procedi a hacer lo mismo con el login...
+
+???
+//Activar Cors
+	builder.Service.AddCors(options =>
+	{
+		options.AddPolicy(name:  MyAllowSpecificOrigins, 
+			builder =>
+			{
+				builder.WithOrigins("*")
+					.AllowAnyMethod()
+					.AllowAnyMethod();	
+			});
+	});
